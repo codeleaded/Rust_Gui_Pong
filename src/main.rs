@@ -1,7 +1,8 @@
 use minifb::{Key, Window, WindowOptions};
 
-const WIDTH: usize = 900;
-const HEIGHT: usize = 600;
+
+const WIDTH: usize = 1600;
+const HEIGHT: usize = 900;
 
 const PADDLE_WIDTH: usize = 20;
 const PADDLE_HEIGHT: usize = 100;
@@ -33,9 +34,12 @@ fn main() {
 
     let mut buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
 
-    // Spieler-Paddles und Ball
     let mut left_paddle = Paddle { x: 20, y: (HEIGHT / 2 - PADDLE_HEIGHT / 2) as f32 };
     let mut right_paddle = Paddle { x: WIDTH - 40, y: (HEIGHT / 2 - PADDLE_HEIGHT / 2) as f32 };
+    
+    //let mut score0 = 0;
+    //let mut score1 = 0;
+    
     let mut ball = Ball {
         x: (WIDTH / 2) as f32,
         y: (HEIGHT / 2) as f32,
@@ -50,7 +54,6 @@ fn main() {
         let dt = (now - last_time).as_secs_f32();
         last_time = now;
 
-        // --- Input ---
         if window.is_key_down(Key::W) {
             left_paddle.y -= PADDLE_SPEED * dt;
         }
@@ -64,20 +67,37 @@ fn main() {
             right_paddle.y += PADDLE_SPEED * dt;
         }
 
-        // Clamp Paddles
         left_paddle.y = left_paddle.y.clamp(0.0, (HEIGHT - PADDLE_HEIGHT) as f32);
         right_paddle.y = right_paddle.y.clamp(0.0, (HEIGHT - PADDLE_HEIGHT) as f32);
 
-        // --- Ball Physics ---
         ball.x += ball.vel_x * dt;
         ball.y += ball.vel_y * dt;
 
-        // Wand-Kollision
         if ball.y <= 0.0 || ball.y >= (HEIGHT - BALL_SIZE) as f32 {
             ball.vel_y = -ball.vel_y;
         }
 
-        // Paddle-Kollision
+        if ball.x <= 0.0 as f32 {
+            //score1 += 1;
+            left_paddle.y = (HEIGHT / 2 - PADDLE_HEIGHT / 2) as f32;
+            right_paddle.y = (HEIGHT / 2 - PADDLE_HEIGHT / 2) as f32;
+
+            ball.x = (WIDTH / 2) as f32;
+            ball.y = (HEIGHT / 2) as f32;
+            ball.vel_x = BALL_SPEED;
+            ball.vel_y = BALL_SPEED;
+        }
+        if ball.x >= WIDTH as f32 {
+            //score0 += 1;
+            left_paddle.y = (HEIGHT / 2 - PADDLE_HEIGHT / 2) as f32;
+            right_paddle.y = (HEIGHT / 2 - PADDLE_HEIGHT / 2) as f32;
+
+            ball.x = (WIDTH / 2) as f32;
+            ball.y = (HEIGHT / 2) as f32;
+            ball.vel_x = BALL_SPEED;
+            ball.vel_y = BALL_SPEED;
+        }
+
         if ball.x <= (left_paddle.x + PADDLE_WIDTH) as f32
             && ball.y + BALL_SIZE as f32 >= left_paddle.y
             && ball.y <= left_paddle.y + PADDLE_HEIGHT as f32
@@ -92,14 +112,10 @@ fn main() {
             ball.vel_x = -BALL_SPEED;
         }
 
-        // --- Render ---
-        buffer.fill(0); // clear screen
+        buffer.fill(0);
 
-        // Draw paddles
         draw_rect(&mut buffer, left_paddle.x, left_paddle.y as usize, PADDLE_WIDTH, PADDLE_HEIGHT, 0xFFFFFF);
         draw_rect(&mut buffer, right_paddle.x, right_paddle.y as usize, PADDLE_WIDTH, PADDLE_HEIGHT, 0xFFFFFF);
-
-        // Draw ball
         draw_rect(&mut buffer, ball.x as usize, ball.y as usize, BALL_SIZE, BALL_SIZE, 0xFFFFFF);
 
         window.update_with_buffer(&buffer, WIDTH, HEIGHT).unwrap();
